@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generador de Prácticas - Prácticas de Electrónica</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: 'Times New Roman', serif;
+      margin: 20px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    h2, h3 {
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .section {
+      margin-bottom: 20px;
+      padding: 10px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .btn {
+      padding: 10px 15px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    .btn-red {
+      background-color: #f44336;
+    }
+    .btn:hover {
+      background-color: #45a049;
+    }
+    .btn-red:hover {
+      background-color: #e57373;
+    }
+    textarea, input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 14px;
+      resize: none;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+    .container {
+      text-align: right;
+      margin: 20px;
+    }
+    iframe {
+      width: 100%;
+      height: 600px;
+      border: 1px solid #ccc;
+      margin-top: 20px;
+    }
+    .copyright {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Generador de Prácticas - Prácticas de Electrónica</h1>
+
+  <div class="section" id="portada">
+    <h2>Portada</h2>
+    <label for="titulo">Título:</label>
+    <input type="text" id="titulo" placeholder="Introduce el título">
+
+    <label for="autor">Autor:</label>
+    <input type="text" id="autor" placeholder="Introduce el nombre del autor">
+  </div>
+
+  <div class="section" id="indice">
+    <h2>Índice</h2>
+    <textarea id="indice-texto" readonly placeholder="El índice se genera automáticamente"></textarea>
+  </div>
+
+  <div class="section" id="introduccion">
+    <h2>Introducción</h2>
+    <input type="text" id="introduccion-titulo" placeholder="Introduce el título de la introducción">
+    <textarea id="introduccion-texto" placeholder="Escribe la introducción"></textarea>
+  </div>
+
+  <div class="section" id="objetivos">
+    <h2>Objetivos</h2>
+    <input type="text" id="objetivos-titulo" placeholder="Introduce el título de los objetivos">
+    <textarea id="objetivos-texto" placeholder="Escribe los objetivos"></textarea>
+  </div>
+
+  <div class="section" id="materiales">
+    <h2>Lista de Materiales</h2>
+    <input type="text" id="materiales-titulo" placeholder="Introduce el título de la lista de materiales">
+    <textarea id="materiales-texto" placeholder="Escribe la lista de materiales"></textarea>
+  </div>
+
+  <div class="section" id="cuerpo">
+    <h2>Cuerpo del Documento</h2>
+    <div id="cuerpo-secciones"></div>
+    <button class="btn" onclick="agregarSeccion()">Agregar Sección</button>
+  </div>
+
+  <div class="section" id="resultados">
+    <h2>Resultados</h2>
+    <input type="text" id="resultados-titulo" placeholder="Introduce el título de los resultados">
+    <textarea id="resultados-texto" placeholder="Escribe los resultados"></textarea>
+  </div>
+
+  <div class="section" id="conclusiones">
+    <h2>Conclusiones</h2>
+    <input type="text" id="conclusiones-titulo" placeholder="Introduce el título de las conclusiones">
+    <textarea id="conclusiones-texto" placeholder="Escribe las conclusiones"></textarea>
+  </div>
+
+  <div class="section" id="bibliografia">
+    <h2>Bibliografía</h2>
+    <input type="text" id="bibliografia-titulo" placeholder="Introduce el título de la bibliografía">
+    <textarea id="bibliografia-texto" placeholder="Escribe la bibliografía"></textarea>
+  </div>
+
+  <div class="container">
+    <button class="btn" onclick="generarDocumento()">Generar Documento</button>
+    <button class="btn" onclick="descargarPDF()">Descargar PDF</button>
+    <button class="btn" onclick="verEnVisor()">Abrir Visor</button>
+  </div>
+
+  <iframe id="visor" style="display:none;"></iframe>
+
+  <div class="copyright">
+    &copy; 2024 Álvaro Merchán Martín. Todos los derechos reservados.
+  </div>
+
+  <script>
+    let contadorSecciones = 1;
+
+    function agregarSeccion() {
+      const cuerpoSecciones = document.getElementById("cuerpo-secciones");
+      const seccionDiv = document.createElement("div");
+      seccionDiv.classList.add("section");
+      
+      const seccionLabel = document.createElement("label");
+      seccionLabel.textContent = "Sección " + contadorSecciones + ":";
+      
+      const seccionTituloInput = document.createElement("input");
+      seccionTituloInput.type = "text";
+      seccionTituloInput.placeholder = "Introduce el título de la sección";
+      seccionTituloInput.classList.add("seccion-titulo");
+
+      const seccionInput = document.createElement("textarea");
+      seccionInput.placeholder = "Escribe el contenido de la nueva sección";
+      
+      const botonEliminar = document.createElement("button");
+      botonEliminar.textContent = "Eliminar Sección";
+      botonEliminar.classList.add("btn", "btn-red");
+      botonEliminar.onclick = function() {
+        cuerpoSecciones.removeChild(seccionDiv);
+        actualizarIndice();
+      };
+
+      seccionDiv.appendChild(seccionLabel);
+      seccionDiv.appendChild(seccionTituloInput);
+      seccionDiv.appendChild(seccionInput);
+      seccionDiv.appendChild(botonEliminar);
+      cuerpoSecciones.appendChild(seccionDiv);
+      
+      contadorSecciones++;
+      actualizarIndice();
+    }
+
+    function generarDocumento() {
+      const titulo = document.getElementById("titulo").value;
+      const autor = document.getElementById("autor").value;
+      const indice = document.getElementById("indice-texto").value;
+      const introduccionTitulo = document.getElementById("introduccion-titulo").value;
+      const introduccionTexto = document.getElementById("introduccion-texto").value;
+      const objetivosTitulo = document.getElementById("objetivos-titulo").value;
+      const objetivosTexto = document.getElementById("objetivos-texto").value;
+      const materialesTitulo = document.getElementById("materiales-titulo").value;
+      const materialesTexto = document.getElementById("materiales-texto").value;
+      const resultadosTitulo = document.getElementById("resultados-titulo").value;
+      const resultadosTexto = document.getElementById("resultados-texto").value;
+      const conclusionesTitulo = document.getElementById("conclusiones-titulo").value;
+      const conclusionesTexto = document.getElementById("conclusiones-texto").value;
+      const bibliografiaTitulo = document.getElementById("bibliografia-titulo").value;
+      const bibliografiaTexto = document.getElementById("bibliografia-texto").value;
+
+      let cuerpo = "";
+      const secciones = document.getElementById("cuerpo-secciones").children;
+      for (let i = 0; i < secciones.length; i++) {
+        const tituloSeccion = secciones[i].getElementsByClassName("seccion-titulo")[0].value;
+        const textoSeccion = secciones[i].getElementsByTagName("textarea")[0].value;
+        cuerpo += tituloSeccion + "\n" + textoSeccion + "\n\n";
+      }
+
+      const contenidoDocumento = `
+        ${titulo}
+        Autor: ${autor}
+        
+        Índice
+        ${indice}
+
+        Introducción
+        ${introduccionTitulo}
+        ${introduccionTexto}
+
+        Objetivos
+        ${objetivosTitulo}
+        ${objetivosTexto}
+
+        Lista de Materiales
+        ${materialesTitulo}
+        ${materialesTexto}
+
+        Cuerpo del Documento
+        ${cuerpo}
+
+        Resultados
+        ${resultadosTitulo}
+        ${resultadosTexto}
+
+        Conclusiones
+        ${conclusionesTitulo}
+        ${conclusionesTexto}
+
+        Bibliografía
+        ${bibliografiaTitulo}
+        ${bibliografiaTexto}
+      `;
+
+      return contenidoDocumento;
+    }
+
+    function descargarPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      const contenido = generarDocumento();
+      const contenidoLimpio = contenido.replace(/(\r\n|\n|\r)/g, '\\n');
+
+      doc.text(contenidoLimpio, 10, 10);
+      doc.save('documento_practicas_electronica.pdf');
+    }
+
+    function verEnVisor() {
+      const visor = document.getElementById("visor");
+      visor.style.display = "block";
+      const contenido = generarDocumento();
+      visor.srcdoc = contenido.replace(/\n/g, '<br>');
+    }
+
+    function actualizarIndice() {
+      const indiceTexto = document.getElementById("indice-texto");
+      const secciones = document.getElementById("cuerpo-secciones").children;
+      let indice = "";
+      for (let i = 0; i < secciones.length; i++) {
+        const tituloSeccion = secciones[i].getElementsByClassName("seccion-titulo")[0].value;
+        indice += `Sección ${i + 1}: ${tituloSeccion}\n`;
+      }
+      indiceTexto.value = indice;
+    }
+  </script>
+</body>
+</html>
