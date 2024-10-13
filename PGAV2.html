@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Clases</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 250px;
+            background-color: #4285f4;
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar h2 {
+            margin-top: 0;
+        }
+        .sidebar button {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: white;
+            color: #4285f4;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .sidebar button:hover {
+            background-color: #e0e0e0;
+        }
+        .main {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .card {
+            background-color: white;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #357ae8;
+        }
+        .dark-mode {
+            background-color: #333;
+            color: #fff;
+        }
+        .dark-mode .card {
+            background-color: #444;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Gestión de Clases</h2>
+        <button onclick="showSection('classSection')">Clases</button>
+        <button onclick="showSection('taskSection')">Tareas</button>
+        <button onclick="showSection('pdfSection')">PDFs</button>
+        <button onclick="showSection('pomodoroSection')">Temporizador Pomodoro</button>
+        <button onclick="showSection('gradeSection')">Notas</button>
+        <button onclick="toggleDarkMode()">Modo Oscuro</button>
+        <button onclick="saveData()">Guardar Datos</button>
+        <button onclick="loadData()">Cargar Datos</button>
+    </div>
+    <div class="main">
+        <div id="classSection" class="card">
+            <h3>Añadir Clase</h3>
+            <input type="text" id="className" placeholder="Nombre de la clase">
+            <button onclick="addClass()">Añadir Clase</button>
+            <ul id="classList"></ul>
+        </div>
+
+        <div id="taskSection" class="card" style="display:none;">
+            <h3>Añadir Tarea</h3>
+            <input type="text" id="taskName" placeholder="Nombre de la tarea">
+            <input type="date" id="taskDueDate">
+            <button onclick="addTask()">Añadir Tarea</button>
+            <ul id="taskList"></ul>
+        </div>
+
+        <div id="pdfSection" class="card" style="display:none;">
+            <h3>Subir PDFs</h3>
+            <input type="file" id="pdfInput" accept="application/pdf" onchange="listPdfFiles(event)">
+            <ul id="pdfList"></ul>
+        </div>
+
+        <div id="pomodoroSection" class="card" style="display:none;">
+            <h3>Temporizador Pomodoro</h3>
+            <div id="timer">25:00</div>
+            <button onclick="startPomodoro()">Iniciar</button>
+            <button onclick="pausePomodoro()">Pausar</button>
+            <button onclick="resetPomodoro()">Reiniciar</button>
+        </div>
+
+        <div id="gradeSection" class="card" style="display:none;">
+            <h3>Registrar Notas</h3>
+            <input type="text" id="gradeName" placeholder="Nombre de la materia">
+            <input type="number" id="gradeValue" placeholder="Nota (0-100)" min="0" max="100">
+            <button onclick="addGrade()">Registrar Nota</button>
+            <h4>Promedio: <span id="averageGrade">0</span></h4>
+            <ul id="gradeList"></ul>
+        </div>
+    </div>
+
+    <script>
+        // Funciones para Clases
+        function addClass() {
+            const className = document.getElementById('className').value;
+            if (className) {
+                let li = document.createElement('li');
+                li.textContent = className;
+                document.getElementById('classList').appendChild(li);
+                document.getElementById('className').value = '';
+            }
+        }
+
+        function showSection(sectionId) {
+            const sections = ['classSection', 'taskSection', 'pdfSection', 'pomodoroSection', 'gradeSection'];
+            sections.forEach(section => {
+                document.getElementById(section).style.display = (section === sectionId) ? 'block' : 'none';
+            });
+        }
+
+        // Funciones para Tareas
+        function addTask() {
+            const taskName = document.getElementById('taskName').value;
+            const taskDueDate = document.getElementById('taskDueDate').value;
+            if (taskName && taskDueDate) {
+                let li = document.createElement('li');
+                li.textContent = `${taskName} - ${taskDueDate}`;
+                document.getElementById('taskList').appendChild(li);
+                document.getElementById('taskName').value = '';
+                document.getElementById('taskDueDate').value = '';
+            }
+        }
+
+        // Funciones para PDFs
+        function listPdfFiles(event) {
+            const pdfList = document.getElementById('pdfList');
+            pdfList.innerHTML = '';
+            const files = event.target.files;
+
+            for (const file of files) {
+                if (file.type === "application/pdf") {
+                    let li = document.createElement('li');
+                    li.innerHTML = `<a href="${URL.createObjectURL(file)}" target="_blank">${file.name}</a>`;
+                    pdfList.appendChild(li);
+                }
+            }
+        }
+
+        // Temporizador Pomodoro
+        let pomodoroTimer;
+        let timeLeft = 1500; // 25 minutos
+        let isRunning = false;
+
+        function startPomodoro() {
+            if (isRunning) return;
+            isRunning = true;
+
+            pomodoroTimer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').textContent = formatTime(timeLeft);
+                if (timeLeft <= 0) {
+                    clearInterval(pomodoroTimer);
+                    alert('¡Tiempo de descanso!');
+                    resetPomodoro();
+                }
+            }, 1000);
+        }
+
+        function pausePomodoro() {
+            isRunning = false;
+            clearInterval(pomodoroTimer);
+        }
+
+        function resetPomodoro() {
+            isRunning = false;
+            clearInterval(pomodoroTimer);
+            timeLeft = 1500; // Reiniciar a 25 minutos
+            document.getElementById('timer').textContent = formatTime(timeLeft);
+        }
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        // Funciones para Notas
+        function addGrade() {
+            const gradeName = document.getElementById('gradeName').value;
+            const gradeValue = document.getElementById('gradeValue').value;
+            if (gradeName && gradeValue) {
+                let li = document.createElement('li');
+                li.textContent = `${gradeName}: ${gradeValue}`;
+                document.getElementById('gradeList').appendChild(li);
+                document.getElementById('gradeName').value = '';
+                document.getElementById('gradeValue').value = '';
+
+                calculateAverage();
+            }
+        }
+
+        function calculateAverage() {
+            const grades = Array.from(document.getElementById('gradeList').children);
+            let total = 0;
+            grades.forEach(grade => {
+                total += parseFloat(grade.textContent.split(': ')[1]);
+            });
+            const average = total / grades.length;
+            document.getElementById('averageGrade').textContent = average.toFixed(2);
+        }
+
+        // Funciones de Modo Oscuro
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
+
+        // Funciones de Guardado
+        function saveData() {
+            const classes = Array.from(document.getElementById('classList').children).map(li => li.textContent);
+            const tasks = Array.from(document.getElementById('taskList').children).map(li => li.textContent);
+            const grades = Array.from(document.getElementById('gradeList').children).map(li => li.textContent);
+
+            const data = { classes, tasks, grades };
+            localStorage.setItem('classManagementData', JSON.stringify(data));
+            alert('Datos guardados!');
+        }
+
+        function loadData() {
+            const data = JSON.parse(localStorage.getItem('classManagementData'));
+            if (data) {
+                document.getElementById('classList').innerHTML = '';
+                document.getElementById('taskList').innerHTML = '';
+                document.getElementById('gradeList').innerHTML = '';
+
+                data.classes.forEach(className => {
+                    let li = document.createElement('li');
+                    li.textContent = className;
+                    document.getElementById('classList').appendChild(li);
+                });
+
+                data.tasks.forEach(task => {
+                    let li = document.createElement('li');
+                    li.textContent = task;
+                    document.getElementById('taskList').appendChild(li);
+                });
+
+                data.grades.forEach(grade => {
+                    let li = document.createElement('li');
+                    li.textContent = grade;
+                    document.getElementById('gradeList').appendChild(li);
+                });
+
+                calculateAverage();
+                alert('Datos cargados!');
+            } else {
+                alert('No hay datos guardados.');
+            }
+        }
+    </script>
+</body>
+</html>
