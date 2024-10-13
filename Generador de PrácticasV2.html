@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generador de Prácticas Mejorado</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 20px;
+      background-color: #f0f0f0;
+    }
+    h1 {
+      text-align: center;
+      font-size: 28px;
+      font-weight: bold;
+      color: #333;
+    }
+    h2, h3 {
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #555;
+    }
+    .section {
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .btn {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-top: 10px;
+    }
+    .btn-red {
+      background-color: #f44336;
+    }
+    .btn:hover {
+      background-color: #45a049;
+    }
+    .btn-red:hover {
+      background-color: #e57373;
+    }
+    textarea, input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+      resize: none;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+    .container {
+      text-align: right;
+      margin: 20px;
+    }
+    iframe {
+      width: 100%;
+      height: 600px;
+      border: 1px solid #ccc;
+      margin-top: 20px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+      color: #777;
+    }
+    #sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 200px;
+      height: 100%;
+      background-color: #333;
+      padding-top: 20px;
+    }
+    #sidebar a {
+      padding: 10px 15px;
+      text-align: left;
+      display: block;
+      color: white;
+      text-decoration: none;
+      margin-bottom: 10px;
+    }
+    #sidebar a:hover {
+      background-color: #555;
+    }
+    #main-content {
+      margin-left: 220px;
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar con accesos rápidos -->
+  <div id="sidebar">
+    <a href="#portada">Portada</a>
+    <a href="#indice">Índice</a>
+    <a href="#introduccion">Introducción</a>
+    <a href="#objetivos">Objetivos</a>
+    <a href="#materiales">Materiales</a>
+    <a href="#cuerpo">Cuerpo</a>
+    <a href="#resultados">Resultados</a>
+    <a href="#conclusiones">Conclusiones</a>
+    <a href="#bibliografia">Bibliografía</a>
+  </div>
+
+  <div id="main-content">
+
+    <h1>Generador de Prácticas Mejorado</h1>
+
+    <div class="section" id="portada">
+      <h2>Portada</h2>
+      <label for="titulo">Título:</label>
+      <input type="text" id="titulo" placeholder="Introduce el título" oninput="guardarEnLocal()">
+
+      <label for="autor">Autor:</label>
+      <input type="text" id="autor" placeholder="Introduce el nombre del autor" oninput="guardarEnLocal()">
+    </div>
+
+    <div class="section" id="indice">
+      <h2>Índice</h2>
+      <textarea id="indice-texto" readonly placeholder="El índice se genera automáticamente"></textarea>
+    </div>
+
+    <div class="section" id="introduccion">
+      <h2>Introducción</h2>
+      <input type="text" id="introduccion-titulo" placeholder="Introduce el título de la introducción" oninput="guardarEnLocal()">
+      <textarea id="introduccion-texto" placeholder="Escribe la introducción" oninput="guardarEnLocal()"></textarea>
+    </div>
+
+    <div class="section" id="objetivos">
+      <h2>Objetivos</h2>
+      <input type="text" id="objetivos-titulo" placeholder="Introduce el título de los objetivos" oninput="guardarEnLocal()">
+      <textarea id="objetivos-texto" placeholder="Escribe los objetivos" oninput="guardarEnLocal()"></textarea>
+    </div>
+
+    <div class="section" id="materiales">
+      <h2>Lista de Materiales</h2>
+      <input type="text" id="materiales-titulo" placeholder="Introduce el título de la lista de materiales" oninput="guardarEnLocal()">
+      <textarea id="materiales-texto" placeholder="Escribe la lista de materiales" oninput="guardarEnLocal()"></textarea>
+      <button class="btn" onclick="insertarTabla()">Añadir Tabla</button>
+    </div>
+
+    <div class="section" id="cuerpo">
+      <h2>Cuerpo del Documento</h2>
+      <div id="cuerpo-secciones"></div>
+      <button class="btn" onclick="agregarSeccion()">Agregar Sección</button>
+    </div>
+
+    <div class="section" id="resultados">
+      <h2>Resultados</h2>
+      <input type="text" id="resultados-titulo" placeholder="Introduce el título de los resultados" oninput="guardarEnLocal()">
+      <textarea id="resultados-texto" placeholder="Escribe los resultados" oninput="guardarEnLocal()"></textarea>
+    </div>
+
+    <div class="section" id="conclusiones">
+      <h2>Conclusiones</h2>
+      <input type="text" id="conclusiones-titulo" placeholder="Introduce el título de las conclusiones" oninput="guardarEnLocal()">
+      <textarea id="conclusiones-texto" placeholder="Escribe las conclusiones" oninput="guardarEnLocal()"></textarea>
+    </div>
+
+    <div class="section" id="bibliografia">
+      <h2>Bibliografía</h2>
+      <input type="text" id="bibliografia-titulo" placeholder="Introduce el título de la bibliografía" oninput="guardarEnLocal()">
+      <textarea id="bibliografia-texto" placeholder="Escribe la bibliografía" oninput="guardarEnLocal()"></textarea>
+    </div>
+
+    <div class="container">
+      <button class="btn" onclick="generarDocumento()">Generar Documento</button>
+      <button class="btn" onclick="descargarPDF()">Descargar PDF</button>
+      <button class="btn" onclick="descargarWord()">Descargar DOCX</button>
+      <button class="btn" onclick="verEnVisor()">Ver Previsualización</button>
+    </div>
+
+    <iframe id="visor" style="display:none;"></iframe>
+
+    <div class="footer">
+      &copy; 2024 Álvaro Merchán Martín. Todos los derechos reservados.
+    </div>
+  </div>
+
+  <script>
+    let contadorSecciones = 1;
+
+    function agregarSeccion() {
+      const cuerpoSecciones = document.getElementById("cuerpo-secciones");
+      const seccionDiv = document.createElement("div");
+      seccionDiv.classList.add("section");
+
+      const seccionLabel = document.createElement("label");
+      seccionLabel.textContent = "Sección " + contadorSecciones + ":";
+
+      const seccionTituloInput = document.createElement("input");
+      seccionTituloInput.type = "text";
+      seccionTituloInput.placeholder = "Introduce el título de la sección";
+      seccionTituloInput.classList.add("seccion-titulo");
+
+      const seccionInput = document.createElement("textarea");
+      seccionInput.placeholder = "Escribe el contenido de la nueva sección";
+
+      const botonAgregarSubseccion = document.createElement("button");
+      botonAgregarSubseccion.textContent = "Agregar Subsección";
+      botonAgregarSubseccion.classList.add("btn");
+      botonAgregarSubseccion.onclick = function() {
+        agregarSubseccion(seccionDiv);
+      };
+
+      const botonAgregarImagen = document.createElement("button");
+      botonAgregarImagen.textContent = "Insertar Imagen";
+      botonAgregarImagen.classList.add("btn");
+      botonAgregarImagen.onclick = function() {
+        insertarImagen(seccionDiv);
+      };
+
+      const botonEliminar = document.createElement("button");
+      botonEliminar.textContent = "Eliminar Sección";
+      botonEliminar.classList.add("btn", "btn-red");
+      botonEliminar.onclick = function() {
+        cuerpoSecciones.removeChild(seccionDiv);
+        actualizarIndice();
+      };
+
+      seccionDiv.appendChild(seccionLabel);
+      seccionDiv.appendChild(seccionTituloInput);
+      seccionDiv.appendChild(seccionInput);
+      seccionDiv.appendChild(botonAgregarSubseccion);
+      seccionDiv.appendChild(botonAgregarImagen);
+      seccionDiv.appendChild(botonEliminar);
+      cuerpoSecciones.appendChild(seccionDiv);
+
+      contadorSecciones++;
+      actualizarIndice();
+    }
+
+    function agregarSubseccion(seccionDiv) {
+      const subseccionDiv = document.createElement("div");
+      subseccionDiv.classList.add("section");
+
+      const subseccionTitulo = document.createElement("input");
+      subseccionTitulo.type = "text";
+      subseccionTitulo.placeholder = "Introduce el título de la subsección";
+
+      const subseccionContenido = document.createElement("textarea");
+      subseccionContenido.placeholder = "Escribe el contenido de la subsección";
+
+      subseccionDiv.appendChild(subseccionTitulo);
+      subseccionDiv.appendChild(subseccionContenido);
+      seccionDiv.appendChild(subseccionDiv);
+    }
+
+    function insertarImagen(seccionDiv) {
+      const inputImagen = document.createElement("input");
+      inputImagen.type = "file";
+      inputImagen.accept = "image/*";
+      inputImagen.onchange = function(event) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.createElement("img");
+          img.src = e.target.result;
+          img.style.maxWidth = "100%";
+          seccionDiv.appendChild(img);
+        };
+        reader.readAsDataURL(event.target.files[0]);
+      };
+      inputImagen.click();
+    }
+
+    function generarDocumento() {
+      const titulo = document.getElementById("titulo").value;
+      const autor = document.getElementById("autor").value;
+      const indice = document.getElementById("indice-texto").value;
+      const introduccionTitulo = document.getElementById("introduccion-titulo").value;
+      const introduccionTexto = document.getElementById("introduccion-texto").value;
+      const objetivosTitulo = document.getElementById("objetivos-titulo").value;
+      const objetivosTexto = document.getElementById("objetivos-texto").value;
+      const materialesTitulo = document.getElementById("materiales-titulo").value;
+      const materialesTexto = document.getElementById("materiales-texto").value;
+      const resultadosTitulo = document.getElementById("resultados-titulo").value;
+      const resultadosTexto = document.getElementById("resultados-texto").value;
+      const conclusionesTitulo = document.getElementById("conclusiones-titulo").value;
+      const conclusionesTexto = document.getElementById("conclusiones-texto").value;
+      const bibliografiaTitulo = document.getElementById("bibliografia-titulo").value;
+      const bibliografiaTexto = document.getElementById("bibliografia-texto").value;
+
+      let cuerpo = "";
+      const secciones = document.getElementById("cuerpo-secciones").children;
+      for (let i = 0; i < secciones.length; i++) {
+        const tituloSeccion = secciones[i].getElementsByClassName("seccion-titulo")[0].value;
+        const textoSeccion = secciones[i].getElementsByTagName("textarea")[0].value;
+        cuerpo += `<h3>${tituloSeccion}</h3><p>${textoSeccion}</p>`;
+
+        // Añadir subsecciones si existen
+        const subsecciones = secciones[i].getElementsByTagName("div");
+        for (let j = 0; j < subsecciones.length; j++) {
+          const tituloSubseccion = subsecciones[j].getElementsByTagName("input")[0]?.value;
+          const textoSubseccion = subsecciones[j].getElementsByTagName("textarea")[0]?.value;
+          if (tituloSubseccion && textoSubseccion) {
+            cuerpo += `<h4>${tituloSubseccion}</h4><p>${textoSubseccion}</p>`;
+          }
+        }
+
+        // Incluir imágenes si existen
+        const imagenes = secciones[i].getElementsByTagName("img");
+        for (let k = 0; k < imagenes.length; k++) {
+          cuerpo += `<img src="${imagenes[k].src}" alt="Imagen">`;
+        }
+      }
+
+      const contenidoDocumento = `
+        <h1>${titulo}</h1>
+        <p><strong>Autor:</strong> ${autor}</p>
+        <h2>Índice</h2>
+        <p>${indice}</p>
+        <h2>Introducción</h2>
+        <h3>${introduccionTitulo}</h3>
+        <p>${introduccionTexto}</p>
+        <h2>Objetivos</h2>
+        <h3>${objetivosTitulo}</h3>
+        <p>${objetivosTexto}</p>
+        <h2>Materiales</h2>
+        <h3>${materialesTitulo}</h3>
+        <p>${materialesTexto}</p>
+        <h2>Cuerpo</h2>
+        ${cuerpo}
+        <h2>Resultados</h2>
+        <h3>${resultadosTitulo}</h3>
+        <p>${resultadosTexto}</p>
+        <h2>Conclusiones</h2>
+        <h3>${conclusionesTitulo}</h3>
+        <p>${conclusionesTexto}</p>
+        <h2>Bibliografía</h2>
+        <h3>${bibliografiaTitulo}</h3>
+        <p>${bibliografiaTexto}</p>
+      `;
+
+      return contenidoDocumento;
+    }
+
+    function verEnVisor() {
+      const visor = document.getElementById("visor");
+      visor.style.display = "block";
+      const contenido = generarDocumento();
+      visor.srcdoc = contenido;
+    }
+
+    function descargarPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      const contenido = generarDocumento().replace(/<[^>]+>/g, "");  // Limpiar etiquetas HTML para PDF
+      doc.text(contenido, 10, 10);
+      doc.save('documento_practicas_electronica.pdf');
+    }
+
+    function descargarWord() {
+      const contenido = generarDocumento();
+      const blob = new Blob([contenido], { type: 'application/msword' });
+      saveAs(blob, 'documento_practicas_electronica.docx');
+    }
+
+    function insertarTabla() {
+      const materialesTexto = document.getElementById("materiales-texto");
+      const tablaHTML = `
+        <table border="1" style="width: 100%; margin-top: 10px;">
+          <tr>
+            <th>Material</th>
+            <th>Cantidad</th>
+          </tr>
+          <tr>
+            <td>Material 1</td>
+            <td>1</td>
+          </tr>
+          <tr>
+            <td>Material 2</td>
+            <td>2</td>
+          </tr>
+        </table>`;
+      materialesTexto.value += tablaHTML;
+    }
+
+    function actualizarIndice() {
+      const indiceTexto = document.getElementById("indice-texto");
+      const secciones = document.getElementById("cuerpo-secciones").children;
+      let indice = "";
+      for (let i = 0; i < secciones.length; i++) {
+        const tituloSeccion = secciones[i].getElementsByClassName("seccion-titulo")[0].value;
+        indice += `Sección ${i + 1}: ${tituloSeccion}\n`;
+      }
+      indiceTexto.value = indice;
+    }
+
+    function guardarEnLocal() {
+      const titulo = document.getElementById("titulo").value;
+      const autor = document.getElementById("autor").value;
+      localStorage.setItem("titulo", titulo);
+      localStorage.setItem("autor", autor);
+    }
+
+    window.onload = function() {
+      if (localStorage.getItem("titulo")) {
+        document.getElementById("titulo").value = localStorage.getItem("titulo");
+      }
+      if (localStorage.getItem("autor")) {
+        document.getElementById("autor").value = localStorage.getItem("autor");
+      }
+    };
+  </script>
+
+</body>
+</html>
