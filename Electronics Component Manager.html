@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electronics Component Manager</title>
+    <style>
+        /* General styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        header {
+            background-color: #1e1e2f;
+            color: #fff;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        #main-container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: auto;
+        }
+        .form-container, .table-container {
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+        input, select, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #1e1e2f;
+            color: white;
+        }
+        .btn {
+            background-color: #0078d7;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .btn:hover {
+            background-color: #005bb5;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Electronics Component Manager</h1>
+    </header>
+    <div id="main-container">
+        <!-- Add/Edit Form -->
+        <div class="form-container">
+            <h2>Manage Components</h2>
+            <form id="componentForm">
+                <label for="componentName">Component Name:</label>
+                <input type="text" id="componentName" placeholder="e.g., Resistor, Capacitor" required>
+                
+                <label for="category">Category:</label>
+                <select id="category" onchange="updateDetailsFields()" required>
+                    <option value="">Select Category</option>
+                    <option value="Resistor">Resistor</option>
+                    <option value="Capacitor">Capacitor</option>
+                    <option value="Transistor">Transistor</option>
+                    <option value="Microcontroller">Microcontroller</option>
+                    <option value="Sensor">Sensor</option>
+                </select>
+                
+                <div id="detailsFields">
+                    <!-- Dynamic fields will be injected here -->
+                </div>
+                
+                <label for="datasheetLink">Datasheet Link:</label>
+                <input type="url" id="datasheetLink" placeholder="https://example.com/datasheet.pdf">
+                
+                <button type="button" class="btn" onclick="addOrEditComponent()">Save Component</button>
+                <input type="hidden" id="editIndex" value="-1">
+            </form>
+        </div>
+
+        <!-- Table and Filters -->
+        <div class="table-container">
+            <h2>Component List</h2>
+            <input type="text" id="searchBar" placeholder="Search by name or category..." oninput="filterComponents()">
+            <table id="componentTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Details</th>
+                        <th>Datasheet</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let components = [];
+        const componentTable = document.getElementById('componentTable').getElementsByTagName('tbody')[0];
+        const detailsFields = document.getElementById('detailsFields');
+
+        // Dynamic fields based on category
+        function updateDetailsFields() {
+            const category = document.getElementById('category').value;
+            detailsFields.innerHTML = '';
+
+            if (category === 'Resistor') {
+                detailsFields.innerHTML = `
+                    <label for="resistanceValue">Resistance (Ohms):</label>
+                    <input type="number" id="resistanceValue" placeholder="e.g., 220">
+                `;
+            } else if (category === 'Capacitor') {
+                detailsFields.innerHTML = `
+                    <label for="capacitanceValue">Capacitance (Farads):</label>
+                    <input type="number" id="capacitanceValue" placeholder="e.g., 0.01">
+                `;
+            } else if (category === 'Transistor') {
+                detailsFields.innerHTML = `
+                    <label for="transistorModel">Model:</label>
+                    <input type="text" id="transistorModel" placeholder="e.g., BC547">
+                    <label for="transistorType">Type:</label>
+                    <select id="transistorType">
+                        <option value="NPN">NPN</option>
+                        <option value="PNP">PNP</option>
+                    </select>
+                `;
+            }
+        }
+
+        // Add/Edit Component
+        function addOrEditComponent() {
+            const name = document.getElementById('componentName').value.trim();
+            const category = document.getElementById('category').value;
+            const datasheet = document.getElementById('datasheetLink').value.trim();
+            const editIndex = parseInt(document.getElementById('editIndex').value);
+
+            const details = {};
+            if (category === 'Resistor') {
+                details.resistance = document.getElementById('resistanceValue').value;
+            } else if (category === 'Capacitor') {
+                details.capacitance = document.getElementById('capacitanceValue').value;
+            } else if (category === 'Transistor') {
+                details.model = document.getElementById('transistorModel').value;
+                details.type = document.getElementById('transistorType').value;
+            }
+
+            const component = { name, category, details, datasheet };
+
+            if (editIndex >= 0) components[editIndex] = component;
+            else components.push(component);
+
+            updateTable();
+            clearForm();
+        }
+
+        // Update table
+        function updateTable() {
+            componentTable.innerHTML = '';
+            components.forEach((component, index) => {
+                const row = componentTable.insertRow();
+                row.innerHTML = `
+                    <td>${component.name}</td>
+                    <td>${component.category}</td>
+                    <td>${JSON.stringify(component.details)}</td>
+                    <td><a href="${component.datasheet}" target="_blank">View</a></td>
+                    <td>
+                        <button class="btn" onclick="editComponent(${index})">Edit</button>
+                        <button class="btn" onclick="deleteComponent(${index})">Delete</button>
+                    </td>
+                `;
+            });
+        }
+
+        function editComponent(index) { /* Logic for editing */ }
+        function deleteComponent(index) { /* Logic for deleting */ }
+    </script>
+</body>
+</html>
